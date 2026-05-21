@@ -1,0 +1,55 @@
+# Unity Generated Files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Generated meta files
+*.meta
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build outputs
+*.apk
+*.aab
+*.ipa
+*.app
+
+# Firebase
+.firebase/
+.firebaserc
+
+# Environment
+.env
+.env.local
+config.local.json
+
+# Node dependencies (for web/docs)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Secret files
+secrets.json
+credentials.json
