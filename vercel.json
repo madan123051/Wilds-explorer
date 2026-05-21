@@ -1,0 +1,46 @@
+{
+  "buildCommand": "echo 'Static site - no build needed'",
+  "outputDirectory": "public",
+  "framework": "other",
+  "env": {
+    "NEXT_PUBLIC_SITE_URL": "@site_url"
+  },
+  "rewrites": [
+    {
+      "source": "/game/(.*)",
+      "destination": "/game/index.html"
+    },
+    {
+      "source": "/(.*).html",
+      "destination": "/$1.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/game/:path*",
+      "headers": [
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Cross-Origin-Embedder-Policy",
+          "value": "require-corp"
+        }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    }
+  ]
+}
