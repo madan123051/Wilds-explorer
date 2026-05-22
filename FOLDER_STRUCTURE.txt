@@ -1,0 +1,73 @@
+Wilds-Explorer Unity Project Structure
+=========================================
+
+Unity Project Root:
+├── Assets/
+│   ├── Scripts/
+│   │   ├── Core/
+│   │   │   ├── GameManager.cs
+│   │   │   ├── Constants.cs
+│   │   │   └── SaveSystem.cs
+│   │   ├── Player/
+│   │   │   ├── PlayerController.cs
+│   │   │   ├── PlayerCamera.cs
+│   │   │   └── PlayerStats.cs
+│   │   ├── Gameplay/
+│   │   │   ├── CoinCollector.cs
+│   │   │   ├── MissionSystem.cs
+│   │   │   ├── LevelManager.cs
+│   │   │   ├── Enemy.cs
+│   │   │   ├── Obstacle.cs
+│   │   │   └── Checkpoint.cs
+│   │   ├── UI/
+│   │   │   ├── UIManager.cs
+│   │   │   ├── HUD.cs
+│   │   │   └── RewardSystem.cs
+│   │   └── Utilities/
+│   │       ├── SceneLoader.cs
+│   │       └── NPC.cs
+│   ├── Scenes/
+│   │   ├── MainMenu.unity
+│   │   ├── Level_1_Jungle.unity
+│   │   └── GameOver.unity
+│   ├── Prefabs/
+│   │   ├── Player.prefab
+│   │   ├── Coin.prefab
+│   │   ├── Enemy.prefab
+│   │   └── Checkpoint.prefab
+│   ├── Models/
+│   │   └── (3D models here)
+│   ├── Textures/
+│   │   └── (Textures here)
+│   ├── Materials/
+│   │   └── (Materials here)
+│   ├── Audio/
+│   │   ├── SFX/
+│   │   └── Music/
+│   └── Resources/
+│       ├── GameConfig.json
+│       ├── SceneConfig.json
+│       └── GameplayConfig.json
+├── ProjectSettings/
+│   └── (Unity auto-creates)
+└── Packages/
+    └── (Dependencies)
+
+GitHub Repo Structure:
+Wilds-explorer/
+├── README.md
+├── QUICK_START.md
+├── QUICK_START_BASICS.md
+├── BASIC_FIRST_SCENE.md
+├── BASIC_PLAYER_SETUP.md
+├── Scripts/
+│   └── (All C# scripts)
+├── docs/
+│   ├── CONCEPT.md
+│   ├── ARCHITECTURE.md
+│   ├── PHASE1_MVP.md
+│   └── PHASE1_TIMELINE.md
+└── configs/
+    ├── GameConfig.json
+    ├── SceneConfig.json
+    └── GameplayConfig.json
