@@ -1,0 +1,55 @@
+{
+  "game": {
+    "title": "Game of Wilds Explorer",
+    "version": "0.1.0",
+    "platforms": ["Android", "WebGL", "PC"]
+  },
+  "gameplay": {
+    "initialSpeed": 5.0,
+    "maxSpeed": 12.0,
+    "acceleration": 2.0,
+    "playerStartHealth": 100,
+    "playerStartCoins": 0,
+    "coinsPerLevel": 50
+  },
+  "difficulty": {
+    "easy": {
+      "enemyHealth": 20,
+      "enemyDamage": 5,
+      "coinMultiplier": 1.5
+    },
+    "normal": {
+      "enemyHealth": 30,
+      "enemyDamage": 10,
+      "coinMultiplier": 1.0
+    },
+    "hard": {
+      "enemyHealth": 50,
+      "enemyDamage": 15,
+      "coinMultiplier": 0.7
+    }
+  },
+  "levels": {
+    "level1": {
+      "name": "Jungle Entrance",
+      "difficulty": "easy",
+      "enemies": 3,
+      "coins": 50,
+      "timeLimit": 300
+    },
+    "level2": {
+      "name": "River Crossing",
+      "difficulty": "normal",
+      "enemies": 5,
+      "coins": 75,
+      "timeLimit": 420
+    },
+    "level3": {
+      "name": "Mountain Trail",
+      "difficulty": "hard",
+      "enemies": 7,
+      "coins": 100,
+      "timeLimit": 600
+    }
+  }
+}
