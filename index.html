@@ -43,6 +43,80 @@
             color: #666;
             font-size: 1.1em;
         }
+
+        /* Phone Screen Mockup */
+        .demo-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .demo-section h2 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .phone-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .phone-frame {
+            position: relative;
+            width: 320px;
+            height: 640px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 8px solid #1a1a1a;
+        }
+
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 25px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+
+        #game3d-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 35px;
+            background: linear-gradient(135deg, #1a4d2e 0%, #2d6a4f 100%);
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-weight: bold;
+            z-index: 5;
+            font-size: 14px;
+        }
+
+        .game-controls {
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .game-controls p {
+            margin: 5px 0;
+        }
         
         .grid {
             display: grid;
@@ -233,14 +307,20 @@
         </header>        
         <!-- Game Demo Section -->
         <div class="demo-section">
-            <h2>🎮 Live Game Demo</h2>
-            <div class="demo-info">
-                <strong>Note:</strong> This is a preview canvas. The full game will be available soon!
+            <h2>🎮 Experience the Game</h2>
+            <p style="color: #666; margin-bottom: 20px;">Interactive 3D demo - Collect treasures and explore!</p>
+            <div class="phone-container">
+                <div class="phone-frame">
+                    <div class="game-ui">
+                        Score: <span id="game-score">0</span>
+                    </div>
+                    <canvas id="game3d-canvas"></canvas>
+                </div>
             </div>
-            <canvas id="gameCanvas" width="800" height="600"></canvas>
-            <p style="text-align: center; color: #666; margin-top: 10px;">
-                Use arrow keys or WASD to move • Space to jump • Click to interact
-            </p>
+            <div class="game-controls">
+                <p><strong>Controls:</strong> Arrow Keys or WASD to move • Collect the glowing turquoise crystals</p>
+                <p style="font-size: 0.85em; color: #999;">Works best on desktop with keyboard</p>
+            </div>
         </div>
         
         
@@ -558,7 +638,7 @@
         </footer>
     </div>
     
-    <!-- Game Script - Loaded at end for proper initialization -->
-    <script src="game.js"></script>
+    <!-- 3D Game Script - Loaded at end for proper initialization -->
+    <script src="game3d.js"></script>
 </body>
 </html>
