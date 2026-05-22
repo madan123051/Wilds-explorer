@@ -1,375 +1,414 @@
-// Game of Wilds Explorer - 3D Jungle Adventure Demo
-import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+// Wilds Explorer - 3D Phone Demo Game
+// Matches actual game mechanics: Collect coins, avoid enemies, score system
 
-let scene, camera, renderer, player, collectibles = [], particles = [];
-let keys = {};
+let scene, camera, renderer;
+let player, coins = [], enemies = [];
 let score = 0;
-let missionActive = false;
-let currentMission = null;
+let gameContainer;
 
-const MISSIONS = [
-    { name: 'Photograph Tiger Tracks', reward: 100, icon: '🐾' },
-    { name: 'Collect Jungle Herbs', reward: 75, icon: '🌿' },
-    { name: 'Find Temple Artifact', reward: 150, icon: '🏛️' },
-    { name: 'Document Bird Species', reward: 50, icon: '🦅' }
-];
+function initGame3D(containerId) {
+    gameContainer = document.getElementById(containerId);
+    if (!gameContainer) return;
 
-function init() {
-    // Scene
+    // Scene setup
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a3a2a);
-    scene.fog = new THREE.Fog(0x1a3a2a, 80, 200);
-    
-    // Camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 3, 8);
-    camera.lookAt(0, 1, 0);
+    scene.background = new THREE.Color(0x1a472a); // Dark jungle green
+    scene.fog = new THREE.Fog(0x1a472a, 50, 200);
+
+    // Camera - top-down view for phone screen
+    const width = gameContainer.clientWidth;
+    const height = gameContainer.clientHeight;
+    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    camera.position.set(0, 35, 0);
+    camera.lookAt(0, 0, 0);
 
     // Renderer
-    const canvas = document.getElementById('game3d-canvas');
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    gameContainer.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0x88aa88, 0.4);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xffff99, 0.7);
-    sunLight.position.set(30, 40, 30);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
-    sunLight.shadow.camera.left = -100;
-    sunLight.shadow.camera.right = 100;
-    sunLight.shadow.camera.top = 100;
-    sunLight.shadow.camera.bottom = -100;
-    scene.add(sunLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(20, 40, 20);
+    scene.add(directionalLight);
 
-    const undergrowthLight = new THREE.HemisphereLight(0x90ee90, 0x2a5a2a, 0.3);
-    scene.add(undergrowthLight);
+    // Ground plane
+    const groundGeom = new THREE.PlaneGeometry(50, 50);
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x2d5a3d });
+    const ground = new THREE.Mesh(groundGeom, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
 
-    // Terrain
-    createTerrain();
-
-    // Jungle environment
-    createJungleEnvironment();
-
-    // Player (Photographer)
-    player = createPhotographer();
+    // Create player (red cube with camera backpack)
+    player = createPlayer();
     scene.add(player);
 
-    // Collectibles
+    // Spawn initial coins
     for (let i = 0; i < 6; i++) {
-        createCollectible();
+        spawnCoin();
     }
 
-    // UI Setup
-    showRandomMission();
+    // Spawn initial enemies
+    for (let i = 0; i < 3; i++) {
+        spawnEnemy();
+    }
 
-    // Events
-    window.addEventListener('keydown', (e) => { keys[e.key] = true; });
-    window.addEventListener('keyup', (e) => { keys[e.key] = false; });
-    window.addEventListener('resize', onWindowResize);
+    // Input handling
+    setupControls();
 
+    // Game loop
     animate();
+
+    // Handle window resize
+    window.addEventListener('resize', onWindowResize);
 }
 
-function createTerrain() {
-    // Hillside terrain with noise
-    const geometry = new THREE.PlaneGeometry(200, 200, 50, 50);
-    const positions = geometry.attributes.position;
-    
-    for (let i = 0; i < positions.count; i++) {
-        const x = positions.getX(i);
-        const z = positions.getZ(i);
-        const y = Math.sin(x * 0.02) * 3 + Math.sin(z * 0.02) * 3 + Math.random() * 0.5;
-        positions.setY(i, y);
-    }
-    positions.needsUpdate = true;
-    geometry.computeVertexNormals();
+function createPlayer() {
+    const group = new THREE.Group();
 
-    const material = new THREE.MeshStandardMaterial({
-        color: 0x3d6d3d,
-        roughness: 0.9,
-        metalness: 0.0
+    // Body - red/orange color
+    const bodyGeom = new THREE.BoxGeometry(1.5, 2, 1.5);
+    const bodyMat = new THREE.MeshStandardMaterial({ 
+        color: 0xFF6B6B,
+        metalness: 0.3,
+        roughness: 0.7
     });
-
-    const terrain = new THREE.Mesh(geometry, material);
-    terrain.rotation.x = -Math.PI / 2;
-    terrain.receiveShadow = true;
-    terrain.position.y = -2;
-    scene.add(terrain);
-}
-
-function createJungleEnvironment() {
-    // Trees
-    for (let i = 0; i < 12; i++) {
-        const tree = createLowPolyTree();
-        tree.position.x = (Math.random() - 0.5) * 140;
-        tree.position.z = (Math.random() - 0.5) * 140;
-        tree.position.y = 0;
-        scene.add(tree);
-    }
-
-    // Vegetation patches
-    for (let i = 0; i < 15; i++) {
-        const bush = createBush();
-        bush.position.x = (Math.random() - 0.5) * 120;
-        bush.position.z = (Math.random() - 0.5) * 120;
-        bush.position.y = 0;
-        scene.add(bush);
-    }
-}
-
-function createLowPolyTree() {
-    const group = new THREE.Group();
-
-    // Trunk
-    const trunkGeom = new THREE.CylinderGeometry(0.6, 0.8, 6, 8);
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3a2a });
-    const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-    trunk.castShadow = true;
-    trunk.receiveShadow = true;
-    trunk.position.y = 3;
-    group.add(trunk);
-
-    // Foliage (cone)
-    const foliageGeom = new THREE.ConeGeometry(4, 8, 8);
-    const foliageMat = new THREE.MeshStandardMaterial({ color: 0x2d5a2d });
-    const foliage = new THREE.Mesh(foliageGeom, foliageMat);
-    foliage.castShadow = true;
-    foliage.receiveShadow = true;
-    foliage.position.y = 7;
-    group.add(foliage);
-
-    return group;
-}
-
-function createBush() {
-    const geometry = new THREE.SphereGeometry(1.5, 6, 6);
-    const material = new THREE.MeshStandardMaterial({ color: 0x3d7a3d });
-    const bush = new THREE.Mesh(geometry, material);
-    bush.castShadow = true;
-    bush.receiveShadow = true;
-    return bush;
-}
-
-function createPhotographer() {
-    const group = new THREE.Group();
-
-    // Body
-    const bodyGeom = new THREE.CylinderGeometry(0.35, 0.4, 1.2, 8);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
     const body = new THREE.Mesh(bodyGeom, bodyMat);
-    body.castShadow = true;
-    body.position.y = 0.8;
+    body.position.y = 1;
     group.add(body);
 
     // Head
-    const headGeom = new THREE.SphereGeometry(0.3, 8, 8);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xD4A574 });
+    const headGeom = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+    const headMat = new THREE.MeshStandardMaterial({ 
+        color: 0xFF8C8C,
+        metalness: 0.2,
+        roughness: 0.6
+    });
     const head = new THREE.Mesh(headGeom, headMat);
-    head.castShadow = true;
-    head.position.y = 1.6;
+    head.position.y = 2.5;
     group.add(head);
 
-    // Camera (small cube in front of head)
-    const cameraGeom = new THREE.BoxGeometry(0.15, 0.15, 0.2);
-    const cameraMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
-    const camera = new THREE.Mesh(cameraGeom, cameraMat);
-    camera.castShadow = true;
-    camera.position.set(0, 1.5, 0.35);
-    group.add(camera);
+    // Eyes
+    const eyeGeom = new THREE.SphereGeometry(0.25, 8, 8);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
+    leftEye.position.set(-0.4, 2.8, 0.7);
+    group.add(leftEye);
 
-    // Backpack
-    const backpackGeom = new THREE.BoxGeometry(0.4, 0.8, 0.3);
-    const backpackMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-    const backpack = new THREE.Mesh(backpackGeom, backpackMat);
-    backpack.castShadow = true;
-    backpack.position.set(0, 0.8, -0.25);
-    group.add(backpack);
+    const rightEye = new THREE.Mesh(eyeGeom, eyeMat);
+    rightEye.position.set(0.4, 2.8, 0.7);
+    group.add(rightEye);
 
-    // Legs
-    const legGeom = new THREE.CylinderGeometry(0.15, 0.2, 0.8, 6);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a });
-    
-    const leftLeg = new THREE.Mesh(legGeom, legMat);
-    leftLeg.castShadow = true;
-    leftLeg.position.set(-0.2, 0.2, 0);
-    group.add(leftLeg);
+    // Camera equipment (on back)
+    const cameraGeom = new THREE.BoxGeometry(0.8, 1.2, 0.8);
+    const cameraMat = new THREE.MeshStandardMaterial({ 
+        color: 0x2c2c2c,
+        metalness: 0.8,
+        roughness: 0.2
+    });
+    const cameraEquip = new THREE.Mesh(cameraGeom, cameraMat);
+    cameraEquip.position.set(0, 1.2, -1);
+    group.add(cameraEquip);
 
-    const rightLeg = new THREE.Mesh(legGeom, legMat);
-    rightLeg.castShadow = true;
-    rightLeg.position.set(0.2, 0.2, 0);
-    group.add(rightLeg);
+    // Camera lens
+    const lensGeom = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16);
+    const lensMat = new THREE.MeshStandardMaterial({ 
+        color: 0x1a1a1a,
+        metalness: 1,
+        roughness: 0
+    });
+    const lens = new THREE.Mesh(lensGeom, lensMat);
+    lens.rotation.z = Math.PI / 2;
+    lens.position.set(0, 1.2, -1.3);
+    group.add(lens);
 
-    group.position.y = 0;
+    // Backpack straps
+    const strapGeom = new THREE.BoxGeometry(0.1, 1.5, 0.1);
+    const strapMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    const leftStrap = new THREE.Mesh(strapGeom, strapMat);
+    leftStrap.position.set(-1, 1.5, -0.8);
+    group.add(leftStrap);
+
+    const rightStrap = new THREE.Mesh(strapGeom, strapMat);
+    rightStrap.position.set(1, 1.5, -0.8);
+    group.add(rightStrap);
+
+    group.position.set(0, 0, 0);
+    group.userData = {
+        velocity: { x: 0, y: 0, z: 0 },
+        speed: 0.5,
+        isMoving: false
+    };
+
     return group;
 }
 
-function createCollectible() {
-    const geometry = new THREE.OctahedronGeometry(0.5, 0);
-    const material = new THREE.MeshStandardMaterial({
+function spawnCoin() {
+    const coinGeom = new THREE.CylinderGeometry(0.5, 0.5, 0.15, 32);
+    const coinMat = new THREE.MeshStandardMaterial({
         color: 0xFFD700,
-        metalness: 0.8,
+        metalness: 1,
         roughness: 0.2,
-        emissive: 0xFF8C00,
+        emissive: 0xFFAA00,
         emissiveIntensity: 0.3
     });
-    const collectible = new THREE.Mesh(geometry, material);
-    
-    collectible.position.x = (Math.random() - 0.5) * 100;
-    collectible.position.y = 1;
-    collectible.position.z = (Math.random() - 0.5) * 100;
-    collectible.castShadow = true;
-    collectible.collected = false;
-    
-    scene.add(collectible);
-    collectibles.push(collectible);
+    const coin = new THREE.Mesh(coinGeom, coinMat);
+
+    coin.position.set(
+        (Math.random() - 0.5) * 40,
+        0.5,
+        (Math.random() - 0.5) * 40
+    );
+
+    coin.userData = {
+        collected: false,
+        floatSpeed: 2 + Math.random(),
+        floatAmount: 0.3
+    };
+
+    // Add glow
+    const glowGeom = new THREE.CylinderGeometry(0.6, 0.6, 0.2, 32);
+    const glowMat = new THREE.MeshBasicMaterial({
+        color: 0xFFAA00,
+        transparent: true,
+        opacity: 0.3
+    });
+    const glow = new THREE.Mesh(glowGeom, glowMat);
+    glow.position.z = 0.05;
+    coin.add(glow);
+
+    scene.add(coin);
+    coins.push(coin);
 }
 
-function createParticles(position) {
-    const particleCount = 16;
-    for (let i = 0; i < particleCount; i++) {
-        const geometry = new THREE.IcosahedronGeometry(0.15, 0);
-        const material = new THREE.MeshStandardMaterial({
-            color: 0xFFD700,
-            emissive: 0xFF8C00,
-            emissiveIntensity: 0.8
-        });
-        const particle = new THREE.Mesh(geometry, material);
+function spawnEnemy() {
+    const enemyGeom = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+    const enemyMat = new THREE.MeshStandardMaterial({
+        color: 0x4ECDC4,
+        metalness: 0.4,
+        roughness: 0.6
+    });
+    const enemy = new THREE.Mesh(enemyGeom, enemyMat);
+
+    enemy.position.set(
+        (Math.random() - 0.5) * 35,
+        0.75,
+        (Math.random() - 0.5) * 35
+    );
+
+    enemy.userData = {
+        velocity: {
+            x: (Math.random() - 0.5) * 0.3,
+            z: (Math.random() - 0.5) * 0.3
+        },
+        bounds: 23
+    };
+
+    // Enemy eyes
+    const eyeGeom = new THREE.SphereGeometry(0.3, 8, 8);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const eye1 = new THREE.Mesh(eyeGeom, eyeMat);
+    eye1.position.set(-0.5, 0.5, 0.8);
+    enemy.add(eye1);
+
+    const eye2 = new THREE.Mesh(eyeGeom, eyeMat);
+    eye2.position.set(0.5, 0.5, 0.8);
+    enemy.add(eye2);
+
+    scene.add(enemy);
+    enemies.push(enemy);
+}
+
+function setupControls() {
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+        keys[e.key.toLowerCase()] = true;
+    });
+    window.addEventListener('keyup', (e) => {
+        keys[e.key.toLowerCase()] = false;
+    });
+
+    // Update player position in animation loop
+    player.userData.keys = keys;
+}
+
+function updatePlayer() {
+    const keys = player.userData.keys || {};
+    const speed = player.userData.speed;
+
+    // Movement
+    let moved = false;
+    if (keys['a'] || keys['arrowleft']) {
+        player.position.x -= speed;
+        moved = true;
+    }
+    if (keys['d'] || keys['arrowright']) {
+        player.position.x += speed;
+        moved = true;
+    }
+    if (keys['w'] || keys['arrowup']) {
+        player.position.z -= speed;
+        moved = true;
+    }
+    if (keys['s'] || keys['arrowdown']) {
+        player.position.z += speed;
+        moved = true;
+    }
+
+    // Boundaries
+    const boundarySize = 22;
+    player.position.x = Math.max(-boundarySize, Math.min(boundarySize, player.position.x));
+    player.position.z = Math.max(-boundarySize, Math.min(boundarySize, player.position.z));
+
+    player.userData.isMoving = moved;
+
+    // Rotation animation (bob when moving)
+    if (moved) {
+        player.rotation.y += 0.02;
+    }
+
+    // Check coin collisions
+    for (let i = coins.length - 1; i >= 0; i--) {
+        const coin = coins[i];
+        const dist = player.position.distanceTo(coin.position);
+
+        if (dist < 2) {
+            score += 10;
+            scene.remove(coin);
+            coins.splice(i, 1);
+            spawnCoin();
+            createParticles(coin.position.x, coin.position.y, coin.position.z, 0xFFD700);
+        }
+    }
+
+    // Check enemy collisions
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        const dist = player.position.distanceTo(enemy.position);
+
+        if (dist < 2) {
+            score += 5;
+            scene.remove(enemy);
+            enemies.splice(i, 1);
+            spawnEnemy();
+            createParticles(enemy.position.x, enemy.position.y, enemy.position.z, 0x4ECDC4);
+        }
+    }
+}
+
+function updateEnemies() {
+    for (const enemy of enemies) {
+        // Move
+        enemy.position.x += enemy.userData.velocity.x;
+        enemy.position.z += enemy.userData.velocity.z;
+
+        // Bounce off boundaries
+        const bound = enemy.userData.bounds;
+        if (enemy.position.x < -bound || enemy.position.x > bound) {
+            enemy.userData.velocity.x *= -1;
+        }
+        if (enemy.position.z < -bound || enemy.position.z > bound) {
+            enemy.userData.velocity.z *= -1;
+        }
+
+        // Rotation
+        enemy.rotation.x += 0.01;
+        enemy.rotation.y += 0.015;
+    }
+}
+
+function updateCoins() {
+    for (const coin of coins) {
+        // Float animation
+        coin.rotation.x += 0.03;
+        coin.rotation.y += 0.05;
+
+        const time = Date.now() * 0.001;
+        coin.position.y = 0.5 + Math.sin(time * coin.userData.floatSpeed) * coin.userData.floatAmount;
+    }
+}
+
+const particles = [];
+
+function createParticles(x, y, z, color) {
+    for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const speed = 0.2 + Math.random() * 0.3;
         
-        particle.position.copy(position);
-        particle.velocity = new THREE.Vector3(
-            (Math.random() - 0.5) * 5,
-            Math.random() * 4,
-            (Math.random() - 0.5) * 5
-        );
-        particle.life = 1;
-        
-        scene.add(particle);
+        const particle = {
+            mesh: createParticleMesh(color),
+            life: 50,
+            velocity: {
+                x: Math.cos(angle) * speed,
+                y: Math.random() * 0.3,
+                z: Math.sin(angle) * speed
+            }
+        };
+
+        particle.mesh.position.set(x, y, z);
+        scene.add(particle.mesh);
         particles.push(particle);
     }
 }
 
-function showRandomMission() {
-    if (missionActive) return;
-    
-    currentMission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
-    missionActive = true;
-    
-    const missionUI = document.getElementById('mission-popup');
-    if (missionUI) {
-        missionUI.innerHTML = `<h3>${currentMission.icon} ${currentMission.name}</h3><p>Reward: ${currentMission.reward} pts</p>`;
-        missionUI.style.display = 'block';
-    }
+function createParticleMesh(color) {
+    const geom = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    const mat = new THREE.MeshStandardMaterial({
+        color: color,
+        emissive: color,
+        emissiveIntensity: 0.5
+    });
+    return new THREE.Mesh(geom, mat);
 }
 
-function completeMission() {
-    if (missionActive) {
-        score += currentMission.reward;
-        updateScore();
+function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
         
-        const missionUI = document.getElementById('mission-popup');
-        if (missionUI) {
-            missionUI.innerHTML = `<h3>✅ Mission Complete!</h3><p>+${currentMission.reward} pts</p>`;
+        p.mesh.position.x += p.velocity.x;
+        p.mesh.position.y += p.velocity.y;
+        p.mesh.position.z += p.velocity.z;
+        
+        p.velocity.y -= 0.01; // Gravity
+        
+        p.life--;
+        p.mesh.material.opacity = p.life / 50;
+
+        if (p.life <= 0) {
+            scene.remove(p.mesh);
+            particles.splice(i, 1);
         }
-        
-        missionActive = false;
-        setTimeout(() => {
-            showRandomMission();
-        }, 2000);
     }
 }
 
 function animate() {
     requestAnimationFrame(animate);
 
-    // Player movement
-    const moveSpeed = 0.25;
-    if (keys['ArrowLeft'] || keys['a']) player.position.x -= moveSpeed;
-    if (keys['ArrowRight'] || keys['d']) player.position.x += moveSpeed;
-    if (keys['ArrowUp'] || keys['w']) player.position.z -= moveSpeed;
-    if (keys['ArrowDown'] || keys['s']) player.position.z += moveSpeed;
-
-    // Clamp to map
-    player.position.x = Math.max(-80, Math.min(80, player.position.x));
-    player.position.z = Math.max(-80, Math.min(80, player.position.z));
-
-    // Animate player (subtle bob)
-    player.position.y = Math.sin(Date.now() * 0.003) * 0.1;
-
-    // Camera follow with smooth lerp
-    const targetCamX = player.position.x;
-    const targetCamZ = player.position.z + 8;
-    camera.position.lerp(
-        new THREE.Vector3(targetCamX, 4, targetCamZ),
-        0.08
-    );
-    camera.lookAt(player.position.x, 1, player.position.z);
-
-    // Animate collectibles
-    collectibles.forEach((collectible, index) => {
-        if (!collectible.collected) {
-            collectible.rotation.x += 0.02;
-            collectible.rotation.y += 0.03;
-            collectible.position.y = 1 + Math.sin(Date.now() * 0.002 + index) * 0.4;
-
-            // Collision check
-            const distance = player.position.distanceTo(collectible.position);
-            if (distance < 1.5) {
-                collectible.collected = true;
-                scene.remove(collectible);
-                createParticles(collectible.position);
-                score += 25;
-                updateScore();
-                completeMission();
-                
-                setTimeout(() => {
-                    createCollectible();
-                }, 1000);
-            }
-        }
-    });
-
-    // Update particles
-    particles = particles.filter(particle => {
-        particle.velocity.y -= 0.12;
-        particle.position.add(particle.velocity);
-        particle.life -= 0.015;
-        particle.material.opacity = particle.life;
-        particle.scale.multiplyScalar(0.96);
-
-        if (particle.life <= 0) {
-            scene.remove(particle);
-            return false;
-        }
-        return true;
-    });
+    updatePlayer();
+    updateEnemies();
+    updateCoins();
+    updateParticles();
 
     renderer.render(scene, camera);
 }
 
-function updateScore() {
-    const scoreDisplay = document.getElementById('game-score');
-    if (scoreDisplay) scoreDisplay.textContent = score;
-}
-
 function onWindowResize() {
-    const canvas = document.getElementById('game3d-canvas');
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    
+    if (!gameContainer) return;
+
+    const width = gameContainer.clientWidth;
+    const height = gameContainer.clientHeight;
+
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+
     renderer.setSize(width, height);
 }
 
-// Start game
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    initGame3D('game3d-canvas');
+});
