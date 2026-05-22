@@ -1,0 +1,42 @@
+{
+  "playerSettings": {
+    "moveSpeed": 5.0,
+    "jumpForce": 5.0,
+    "maxHealth": 100,
+    "maxStamina": 100,
+    "staminaRechargeRate": 10.0
+  },
+  "coinSettings": {
+    "collectRadius": 2.0,
+    "coinValue": 10,
+    "coinRespawnTime": 30
+  },
+  "missionSettings": {
+    "maxActiveMissions": 3,
+    "rewardXP": 100,
+    "rewardCoins": 50
+  },
+  "enemySettings": {
+    "patrolSpeed": 2.0,
+    "chaseSpeed": 4.0,
+    "detectionRange": 15.0,
+    "damage": 10
+  },
+  "difficultyLevels": {
+    "Easy": {
+      "enemyDamage": 5,
+      "coinMultiplier": 1.0,
+      "timeLimit": 600
+    },
+    "Medium": {
+      "enemyDamage": 10,
+      "coinMultiplier": 1.5,
+      "timeLimit": 450
+    },
+    "Hard": {
+      "enemyDamage": 15,
+      "coinMultiplier": 2.0,
+      "timeLimit": 300
+    }
+  }
+}

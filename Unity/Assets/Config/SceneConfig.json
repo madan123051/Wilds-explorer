@@ -1,0 +1,43 @@
+{
+  "scenes": {
+    "MainMenu": {
+      "name": "MainMenu",
+      "buildIndex": 0,
+      "description": "Main menu scene with play button, settings",
+      "managers": ["UIManager", "AudioManager"],
+      "cameras": ["MenuCamera"]
+    },
+    "Level_1_Jungle": {
+      "name": "Level_1_Jungle",
+      "buildIndex": 1,
+      "description": "First jungle level with coins and missions",
+      "managers": ["GameManager", "UIManager", "LevelManager"],
+      "cameras": ["PlayerCamera"],
+      "difficulty": "Easy",
+      "coinCount": 50,
+      "missionCount": 3
+    },
+    "Level_2_Mountain": {
+      "name": "Level_2_Mountain",
+      "buildIndex": 2,
+      "description": "Mountain trail level with obstacles",
+      "managers": ["GameManager", "UIManager", "LevelManager"],
+      "difficulty": "Medium",
+      "coinCount": 75,
+      "missionCount": 4
+    },
+    "GameOver": {
+      "name": "GameOver",
+      "buildIndex": 3,
+      "description": "Game over scene with restart option",
+      "managers": ["UIManager"],
+      "cameras": ["GameOverCamera"]
+    }
+  },
+  "gameSettings": {
+    "targetFPS": 60,
+    "quality": "High",
+    "audioEnabled": true,
+    "saveInterval": 30
+  }
+}
