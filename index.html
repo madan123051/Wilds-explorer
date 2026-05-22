@@ -108,6 +108,51 @@
             font-size: 14px;
         }
 
+
+        /* Mission Popup */
+        #mission-popup {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 58, 42, 0.95);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 12px 20px;
+            color: white;
+            text-align: center;
+            font-size: 0.75em;
+            z-index: 100;
+            max-width: 85%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.3s ease-out;
+            display: none;
+        }
+        
+        #mission-popup h3 {
+            margin: 0;
+            color: #FFD700;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+        
+        #mission-popup p {
+            margin: 0;
+            font-size: 0.75em;
+            color: #ddd;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
         .game-controls {
             margin-top: 20px;
             color: #666;
@@ -312,14 +357,18 @@
             <div class="phone-container">
                 <div class="phone-frame">
                     <div class="game-ui">
-                        Score: <span id="game-score">0</span>
+                        <div style="font-size: 0.8em; color: #fff;">Points: <span id="game-score" style="font-weight: bold; color: #FFD700;">0</span></div>
                     </div>
                     <canvas id="game3d-canvas"></canvas>
+                    <div id="mission-popup" class="mission-popup">
+                        <h3>🎯 Complete Your Mission!</h3>
+                        <p>Explore and collect treasures</p>
+                    </div>
                 </div>
             </div>
             <div class="game-controls">
-                <p><strong>Controls:</strong> Arrow Keys or WASD to move • Collect the glowing turquoise crystals</p>
-                <p style="font-size: 0.85em; color: #999;">Works best on desktop with keyboard</p>
+                <p><strong>Controls:</strong> Arrow Keys or WASD to move • Collect golden treasures and complete jungle missions</p>
+                <p style="font-size: 0.85em; color: #999;">💡 You are a wildlife photographer exploring the jungle! Find collectibles to complete dynamic missions</p>
             </div>
         </div>
         
